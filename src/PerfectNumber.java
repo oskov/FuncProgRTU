@@ -1,38 +1,49 @@
+import java.util.HashMap;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class PerfectNumber {
+    private static final HashMap<Integer, STATE> map = new HashMap() {{
+        put(-1, STATE.DEFICIENT);
+        put(0, STATE.PERFECT);
+        put(1, STATE.ABUNDANT);
+    }};
+
     public enum STATE {
         ABUNDANT, DEFICIENT, PERFECT;
     }
 
     public static PerfectNumber.STATE process(int number) {
-        Set<Integer> divisors = PerfectNumber.divisors(number);
-        Integer[] array = divisors.toArray(new Integer[0]);
-        int sum = 0;
-
-        for (int i = 0; i < array.length - 1; i++) {
-            sum += array[i];
-        }
-
-        if (sum < number) {
-            return STATE.DEFICIENT;
-        } else if (sum > number) {
-            return STATE.ABUNDANT;
-        } else {
-            return STATE.PERFECT;
-        }
+        return map.get(getKeyValue(divisors(number).stream().mapToInt(i -> i).sum() / 2 - number));
     }
 
     public static Set<Integer> divisors(int number) {
-        TreeSet<Integer> result = new TreeSet<>();
-
-        for (int i = 1; i <= number; i++) {
-            if (number % i == 0) {
-                result.add(i);
-            }
-        }
-
+        Set<Integer> result = IntStream.rangeClosed(1, (int) Math.sqrt(number))
+                .filter(x -> number % x == 0)
+                .boxed()
+                .collect(Collectors.toSet());
+        Set<Integer> afterSqrt = result.stream()
+                .map(x -> number / x)
+                .collect(Collectors.toSet());
+        result.addAll(afterSqrt);
         return result;
     }
+
+    private static int getKeyValue(int difference) {
+        return boolToInt(isBelowZero(difference)) * -1 + boolToInt(isAboveZero(difference));
+    }
+
+    private static int boolToInt(boolean b) {
+        return Boolean.compare(b, false);
+    }
+
+    private static boolean isBelowZero(int difference) {
+        return difference < 0;
+    }
+
+    private static boolean isAboveZero(int difference) {
+        return difference > 0;
+    }
+
 }
